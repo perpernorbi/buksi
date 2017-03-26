@@ -2,11 +2,11 @@
 #include <ti/mcu/msp430/Grace.h>
 #include "serial.h"
 #include "tick.h"
+#include "drive.h"
 
 int main(void)
 {
 	int i = 0;
-	char wheel = 0;
 	Grace_init();
 	serial_initialize();
     while (1) {
@@ -19,13 +19,8 @@ int main(void)
     		    i = 0;
     		}
     		const char * dataframe = serial_getNextFrame();
-    		if (dataframe) {
-    			unsigned int pwm;
-    			pwm = (dataframe[1] & 0x7F) << 8;
-   				TA1CCR1 = pwm;
-    			pwm = (dataframe[2] & 0x7F) << 8;
-   				TA1CCR2 = pwm;
-    		}
+    		if (dataframe)
+    			drive_setVelocity(dataframe[1], dataframe[2]);
     	}
 /*    	if (P2IN & BIT5) wheel |= 0x01;
     	if (!(i & 0x03)) {
