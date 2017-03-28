@@ -79,6 +79,9 @@ void GPIO_graceInit(void)
     /* Port 2 Direction Register */
     P2DIR = BIT1 | BIT2 | BIT3 | BIT4;
 
+    /* Port 2 Resistor Enable Register */
+    P2REN = BIT0 | BIT5;
+
     /* Port 2 Interrupt Edge Select Register */
     P2IES = 0;
 
