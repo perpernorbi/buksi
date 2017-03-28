@@ -1,3 +1,4 @@
 .metadata
+*.bak
 *.lib
 *.obj
