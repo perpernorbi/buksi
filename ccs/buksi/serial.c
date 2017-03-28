@@ -12,39 +12,39 @@
 
 
 #define FRAME_SIZE 3
-#define BUFFER_SIZE 10
-static char buffer[BUFFER_SIZE];
-static const char* readptr;
-static char* writeptr;
+#define RECEIVE_BUFFER_SIZE 10
+static char receive_buffer[RECEIVE_BUFFER_SIZE];
+static const char* receive_readptr;
+static char* receive_writeptr;
 
 void serial_initialize()
 {
-	readptr = buffer-1;
-	writeptr = buffer;
+	receive_readptr = receive_buffer-1;
+	receive_writeptr = receive_buffer;
 }
 
 void serial_receiveByte(char data)
 {
 	__bic_SR_register(GIE);
-	(*writeptr) = data;
-	++writeptr;
-	if (writeptr - buffer > BUFFER_SIZE) halt();
+	(*receive_writeptr) = data;
+	++receive_writeptr;
+	if (receive_writeptr - receive_buffer > RECEIVE_BUFFER_SIZE) halt();
 	__bis_SR_register(GIE);
 }
 
 const char * serial_getNextFrame()
 {
 	__bic_SR_register(GIE);
-	++readptr;
-	while (((*readptr) & 0x80 != 0x80) && (readptr != writeptr)) ++readptr;
-	if (readptr == writeptr) {
+	++receive_readptr;
+	while (((*receive_readptr) & 0x80 != 0x80) && (receive_readptr != receive_writeptr)) ++receive_readptr;
+	if (receive_readptr == receive_writeptr) {
 		serial_initialize();
 		__bis_SR_register(GIE);
 		return NULL;
 	}
-	if (readptr + FRAME_SIZE <= writeptr) {
+	if (receive_readptr + FRAME_SIZE <= receive_writeptr) {
 		__bis_SR_register(GIE);
-		return readptr;
+		return receive_readptr;
 	} else {
 		__bis_SR_register(GIE);
 		return NULL;
