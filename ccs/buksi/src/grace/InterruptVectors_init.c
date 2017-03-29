@@ -39,6 +39,53 @@ void InterruptVectors_graceInit(void)
 
 
 /*
+ *  ======== USCI A0/B0 TX Interrupt Handler Generation ========
+ *
+ * Here are several important notes on using USCI_A0/B0 TX interrupt Handler:
+ * 1. User could use the following code as a template to service the interrupt
+ *    handler. Just simply copy and paste it into your user definable code
+ *    section.
+ *  For UART and SPI configuration:
+
+    if (IFG2 & UCA0TXIFG) {
+
+    }
+    else if (IFG2 & UCB0TXIFG) {
+
+    }
+
+ *  For I2C configuration:
+    if (IFG2 & UCA0/B0TXIFG) {
+
+    }
+    else if (IFG2 & UCA0/B0RXIFG) {
+
+    }
+
+
+ * 2. User could also exit from low power mode and continue with main
+ *    program execution by using the following instruction before exiting
+ *    this interrupt handler.
+ *
+ *    __bic_SR_register_on_exit(LPMx_bits);
+ */
+#pragma vector=USCIAB0TX_VECTOR
+__interrupt void USCI0TX_ISR_HOOK(void)
+{
+    /* USER CODE START (section: USCI0TX_ISR_HOOK) */
+    /* replace this comment with your code */
+	unsigned short gie = _get_SR_register() & GIE;
+	__bic_SR_register(GIE);
+	const char * charToSend = serial_getNextCharToSend();
+	if (charToSend)
+		UCA0TXBUF = (*charToSend);
+	else
+		IFG2 &= (~UCA0TXIFG);
+	__bic_SR_register(gie);
+    /* USER CODE END (section: USCI0TX_ISR_HOOK) */
+}
+
+/*
  *  ======== USCI A0/B0 RX Interrupt Handler Generation ========
  *
  * Here are several important notes on using USCI_A0/B0 RX interrupt Handler:

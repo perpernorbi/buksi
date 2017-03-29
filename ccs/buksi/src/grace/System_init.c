@@ -39,24 +39,24 @@ void System_graceInit(void)
      * 
      * ~UCB0TXIFG -- No interrupt pending
      * ~UCB0RXIFG -- No interrupt pending
-     * ~UCA0TXIFG -- No interrupt pending
+     * UCA0TXIFG -- Interrupt pending
      * UCA0RXIFG -- Interrupt pending
      * 
      * Note: ~<BIT> indicates that <BIT> has value zero
      */
-    IFG2 &= ~(UCA0RXIFG);
+    IFG2 &= ~(UCA0TXIFG | UCA0RXIFG);
 
     /* 
      * IE2, Interrupt Enable Register 2
      * 
      * ~UCB0TXIE -- Interrupt disabled
      * ~UCB0RXIE -- Interrupt disabled
-     * ~UCA0TXIE -- Interrupt disabled
+     * UCA0TXIE -- Interrupt enabled
      * UCA0RXIE -- Interrupt enabled
      * 
      * Note: ~<BIT> indicates that <BIT> has value zero
      */
-    IE2 |= UCA0RXIE;
+    IE2 |= UCA0TXIE | UCA0RXIE;
 
     /* 
      * SR, Status Register

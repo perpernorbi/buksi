@@ -8,6 +8,8 @@
 #include <msp430.h>
 #include <stddef.h>
 
+#include "serial.h"
+
 #define WHEEL_COUNT 2
 static volatile unsigned char const *wheel_encoder_port[WHEEL_COUNT] = { &P2IN, &P2IN };
 static const char wheel_encoder_pin[WHEEL_COUNT] = { BIT5, BIT0 };
@@ -35,13 +37,17 @@ static void encode(size_t wheel_id)
 	if ((*wheel_encoder_port[wheel_id]) & wheel_encoder_pin[wheel_id]) wheel_encoder_buffer[wheel_id] |= 0x01;
 	if ((wheel_encoder_status[wheel_id] == 1) && ((wheel_encoder_buffer[wheel_id] & 0x0F) == 0x00)) {
 		wheel_encoder_status[wheel_id] = 0;
-		while (!(IFG2 & UCA0TXIFG)); // Poll TXIFG to until set
-		UCA0TXBUF = 'd';
+		serial_sendChar('d');
+		serial_sendChar('o');
+		serial_sendChar('w');
+		serial_sendChar('n');
+		serial_sendChar('\r');
 	}
 	if ((wheel_encoder_status[wheel_id] == 0) && (wheel_encoder_buffer[wheel_id] & 0x0F == 0x0F)) {
 		wheel_encoder_status[wheel_id] = 1;
-		while (!(IFG2 & UCA0TXIFG)); // Poll TXIFG to until set
-		UCA0TXBUF = 'u';
+		serial_sendChar('u');
+		serial_sendChar('p');
+		serial_sendChar('\r');
 	}
 	wheel_encoder_buffer[wheel_id] <<= 1;
 
