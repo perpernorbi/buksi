@@ -76,12 +76,12 @@ __interrupt void USCI0TX_ISR_HOOK(void)
     /* replace this comment with your code */
 	unsigned short gie = _get_SR_register() & GIE;
 	__bic_SR_register(GIE);
-	const char * charToSend = serial_getNextCharToSend();
+	volatile const char * charToSend = serial_getNextCharToSend();
 	if (charToSend)
 		UCA0TXBUF = (*charToSend);
 	else
 		IFG2 &= (~UCA0TXIFG);
-	__bic_SR_register(gie);
+	__bis_SR_register(gie);
     /* USER CODE END (section: USCI0TX_ISR_HOOK) */
 }
 

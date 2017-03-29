@@ -19,16 +19,22 @@ static char* receive_writeptr;
 
 #define SEND_BUFFER_SIZE 10
 static char send_buffer[SEND_BUFFER_SIZE];
-static const char* send_readptr;
-static char* send_writeptr;
+static volatile const char* send_readptr;
+static volatile char* send_writeptr;
+
+static char * const init_send_ptr = send_buffer - 1;
+
+inline void initialize_sendptrs()
+{
+	send_readptr = init_send_ptr;
+	send_writeptr = init_send_ptr;
+}
 
 void serial_initialize()
 {
 	receive_readptr = receive_buffer-1;
 	receive_writeptr = receive_buffer;
-
-	send_readptr = send_buffer-1;
-	send_writeptr = send_buffer;
+	initialize_sendptrs();
 }
 
 void serial_receiveByte(char data)
@@ -45,11 +51,15 @@ void serial_sendChar(char data)
 {
 	unsigned short gie = _get_SR_register() & GIE;
 	__bic_SR_register(GIE);
-//		UCA0TXBUF = data;
-	(*send_writeptr) = data;
-	++send_writeptr;
-	if (send_writeptr - send_buffer > RECEIVE_BUFFER_SIZE) halt();
-	if (send_writeptr == (send_buffer + 1)) UCA0TXBUF = (*serial_getNextCharToSend());
+	if (send_writeptr == init_send_ptr) {
+		++send_writeptr;
+		UCA0TXBUF = data;
+	} else {
+		(*send_writeptr) = data;
+		++send_writeptr;
+		if (send_writeptr - send_buffer > RECEIVE_BUFFER_SIZE) halt();
+		//if (send_writeptr == (send_buffer + 1)) UCA0TXBUF = (*serial_getNextCharToSend());
+	}
 	__bis_SR_register(gie);
 }
 
@@ -74,14 +84,13 @@ const char * serial_getNextFrame()
 	}
 }
 
-const char * serial_getNextCharToSend()
+volatile const char * serial_getNextCharToSend()
 {
 	unsigned short gie = _get_SR_register() & GIE;
 	__bic_SR_register(GIE);
 	++send_readptr;
-	if (send_readptr == send_writeptr) {
-		send_readptr = send_buffer-1;
-		send_writeptr = send_buffer;
+	if (send_readptr >= send_writeptr) {
+		initialize_sendptrs();
 		__bis_SR_register(gie);
 		return NULL;
 	}
