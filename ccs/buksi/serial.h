@@ -13,6 +13,7 @@ void serial_initialize();
 void serial_receiveByte(char data);
 const char * serial_getNextFrame();
 void serial_sendChar(char data);
-volatile const char * serial_getNextCharToSend();
+const char * serial_getNextCharToSend();
+void serial_sendString(const char* data);
 
 #endif /* SERIAL_H_ */

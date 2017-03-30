@@ -76,7 +76,7 @@ __interrupt void USCI0TX_ISR_HOOK(void)
     /* replace this comment with your code */
 	unsigned short gie = _get_SR_register() & GIE;
 	__bic_SR_register(GIE);
-	volatile const char * charToSend = serial_getNextCharToSend();
+	const char * charToSend = serial_getNextCharToSend();
 	if (charToSend)
 		UCA0TXBUF = (*charToSend);
 	else
