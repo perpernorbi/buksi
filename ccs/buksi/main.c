@@ -20,7 +20,7 @@ int main(void)
 //    		}
     		const char * dataframe = serial_getNextFrame();
     		if (dataframe)
-    			drive_setVelocity(dataframe[1], dataframe[2]);
+    			drive_setVelocity(dataframe+1);
     	}
     	drive_tick(tick_counter);
 /*    	if (P2IN & BIT5) wheel |= 0x01;

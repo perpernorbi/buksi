@@ -11,25 +11,27 @@
 #include "serial.h"
 
 #define WHEEL_COUNT 2
-static volatile unsigned char const *wheel_encoder_port[WHEEL_COUNT] = { &P2IN, &P2IN };
+static volatile unsigned char const * const wheel_encoder_port[WHEEL_COUNT] = { &P2IN, &P2IN };
 static const char wheel_encoder_pin[WHEEL_COUNT] = { BIT5, BIT0 };
+static volatile unsigned char * const wheel_drive_port[WHEEL_COUNT] = { &P2OUT, &P2OUT };
+static volatile unsigned int * const wheel_drive_pwm_reg[WHEEL_COUNT] = { &TA1CCR1, &TA1CCR2 };
+static const char wheel_drive_direction_pin[WHEEL_COUNT] = { BIT2, BIT3 };
 static unsigned char wheel_encoder_buffer[WHEEL_COUNT] = { 0, 0 };
 static unsigned char wheel_encoder_status[WHEEL_COUNT] = { 0, 0 };
 
-void drive_setVelocity(char left, char right)
+void drive_setVelocity(const char velocities[2])
 {
-	if (left > 0x80) {
-		P2OUT |= BIT2;
-		left = 0xFF - left;
+	unsigned char i;
+	for (i = 0; i < 2; ++i) {
+		char velocity = velocities[i];
+		if (velocity > 0x80) {
+			(*wheel_drive_port[i]) |= wheel_drive_direction_pin[i];
+			velocity = 0xFF - velocity;
+		} else {
+			(*wheel_drive_port[i]) &= ~wheel_drive_direction_pin[i];
+		}
+		(*wheel_drive_pwm_reg[i]) = (velocity & 0x7F) << 8;
 	}
-	else P2OUT &= ~BIT2;
-	if (right > 0x80) {
-		P2OUT |= BIT3;
-		right = 0xFF - right;
-	}
-	else P2OUT &= ~BIT3;
-	TA1CCR1 = (left & 0x7F) << 8;
-	TA1CCR2 = (right & 0x7F) << 8;
 }
 
 static void encode(size_t wheel_id)
