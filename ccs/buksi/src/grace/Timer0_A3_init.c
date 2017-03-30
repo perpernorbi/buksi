@@ -49,7 +49,7 @@ void Timer0_A3_graceInit(void)
     TA0CCTL0 = CM_0 | CCIS_0 | OUTMOD_0 | CCIE;
 
     /* TA0CCR0, Timer_A Capture/Compare Register 0 */
-    TA0CCR0 = 124;
+    TA0CCR0 = 999;
 
     /* 
      * TA0CTL, Timer_A3 Control Register

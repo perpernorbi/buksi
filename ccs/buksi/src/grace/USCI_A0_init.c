@@ -56,15 +56,15 @@ void USCI_A0_graceInit(void)
      * Modulation Control Register
      * 
      * UCBRF_0 -- First stage 0
-     * UCBRS_6 -- Second stage 6
+     * UCBRS_4 -- Second stage 4
      * ~UCOS16 -- Disabled
      * 
      * Note: ~UCOS16 indicates that UCOS16 has value zero
      */
-    UCA0MCTL = UCBRF_0 | UCBRS_6;
+    UCA0MCTL = UCBRF_0 | UCBRS_4;
     
     /* Baud rate control register 0 */
-    UCA0BR0 = 8;
+    UCA0BR0 = 69;
     
     /* Enable USCI */
     UCA0CTL1 &= ~UCSWRST;
