@@ -37,17 +37,9 @@ static void encode(size_t wheel_id)
 	if ((*wheel_encoder_port[wheel_id]) & wheel_encoder_pin[wheel_id]) wheel_encoder_buffer[wheel_id] |= 0x01;
 	if ((wheel_encoder_status[wheel_id] == 1) && ((wheel_encoder_buffer[wheel_id] & 0x0F) == 0x00)) {
 		wheel_encoder_status[wheel_id] = 0;
-		serial_sendChar('d');
-		serial_sendChar('o');
-		serial_sendChar('w');
-		serial_sendChar('n');
-		serial_sendChar('\r');
 	}
 	if ((wheel_encoder_status[wheel_id] == 0) && (wheel_encoder_buffer[wheel_id] & 0x0F == 0x0F)) {
 		wheel_encoder_status[wheel_id] = 1;
-		serial_sendChar('u');
-		serial_sendChar('p');
-		serial_sendChar('\r');
 	}
 	wheel_encoder_buffer[wheel_id] <<= 1;
 
