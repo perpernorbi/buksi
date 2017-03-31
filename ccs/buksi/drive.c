@@ -47,7 +47,7 @@ static void encode(size_t wheel_id)
 
 }
 
-void drive_tick(unsigned int tick_counter)
+void drive_tick()
 {
 	encode(0);
 	//encode(1);
