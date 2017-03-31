@@ -8,6 +8,7 @@
 #ifndef TICK_H_
 #define TICK_H_
 
+extern volatile unsigned int tick_counter;
 void tick_set();
 int tick_get_and_clear();
 
