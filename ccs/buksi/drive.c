@@ -24,7 +24,7 @@ static int wheel_position[WHEEL_COUNT] = { 0, 0 };
 static int wheel_speed_last_position[WHEEL_COUNT] = { 0, 0 };
 static int wheel_measured_spped_reciprocal[WHEEL_COUNT] = { 0, 0 };
 
-static const unsigned int speed_update_interval_mask = 0x3FF;
+static const unsigned int speed_update_interval_mask = 0x1FF;
 
 void drive_setVelocity(const char velocities[2])
 {

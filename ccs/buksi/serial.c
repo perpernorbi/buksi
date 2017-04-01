@@ -43,8 +43,8 @@ void serial_receiveByte(char data)
 	__bic_SR_register(GIE);
 	(*receive_writeptr) = data;
 	++receive_writeptr;
-	if (receive_writeptr - receive_buffer > RECEIVE_BUFFER_SIZE) halt();
 	__bis_SR_register(gie);
+	if (receive_writeptr - receive_buffer > RECEIVE_BUFFER_SIZE) halt();
 }
 
 void serial_sendChar(char data)
