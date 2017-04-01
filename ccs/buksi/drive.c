@@ -21,8 +21,8 @@ static unsigned char wheel_encoder_buffer[WHEEL_COUNT] = { 0, 0 };
 static unsigned char wheel_encoder_status[WHEEL_COUNT] = { 0, 0 };
 
 static int wheel_position[WHEEL_COUNT] = { 0, 0 };
-static int wheel_speed_last_position[WHEEL_COUNT] = { 0, 0 };
-static int wheel_measured_spped_reciprocal[WHEEL_COUNT] = { 0, 0 };
+static int wheel_velocity_last_position[WHEEL_COUNT] = { 0, 0 };
+static int wheel_measured_velocity_reciprocal[WHEEL_COUNT] = { 0, 0 };
 
 static const unsigned int speed_update_interval_mask = 0x1FF;
 
@@ -41,12 +41,12 @@ void drive_setVelocity(const char velocities[2])
 	}
 }
 
-static void update_measured_speed(unsigned char wheel_id)
+static void update_measured_velocity(unsigned char wheel_id)
 {
-	wheel_measured_spped_reciprocal[wheel_id] = wheel_position[wheel_id] - wheel_speed_last_position[wheel_id];
-	wheel_speed_last_position[wheel_id] = wheel_position[wheel_id];
-	serial_sendChar((char)(wheel_measured_spped_reciprocal[wheel_id] & 0xFF));
-	serial_sendChar((char)(wheel_measured_spped_reciprocal[wheel_id] >> 8));
+	wheel_measured_velocity_reciprocal[wheel_id] = wheel_position[wheel_id] - wheel_velocity_last_position[wheel_id];
+	wheel_velocity_last_position[wheel_id] = wheel_position[wheel_id];
+	serial_sendChar((char)(wheel_measured_velocity_reciprocal[wheel_id] & 0xFF));
+	serial_sendChar((char)(wheel_measured_velocity_reciprocal[wheel_id] >> 8));
 }
 
 static void encode(size_t wheel_id)
@@ -69,7 +69,7 @@ void drive_tick()
 	encode(0);
 	//encode(1);
 	if (! (tick_counter & speed_update_interval_mask)) {
-		update_measured_speed(0);
+		update_measured_velocity(0);
 		//update_measured_speed(1);
 	}
 }
