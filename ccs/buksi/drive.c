@@ -25,6 +25,8 @@ static int wheel_velocity_last_position[WHEEL_COUNT] = { 0, 0 };
 static signed char wheel_measured_velocity[WHEEL_COUNT] = { 0, 0 };
 static signed char wheel_desired_velocity[WHEEL_COUNT] = { 0, 0 };
 
+static signed int controller_integrator[WHEEL_COUNT] = { 0, 0 };
+
 static const unsigned int speed_update_interval_mask = 0x1FF;
 
 void drive_setVelocity(const char velocities[2])
@@ -76,9 +78,21 @@ static void update_pwm(unsigned char wheel, char pwm)
 
 static void control_pwm(unsigned char wheel)
 {
-	//int error = wheel_measured_velocity[0] - wheel_desired_velocity[0];
-	update_pwm(wheel, wheel_desired_velocity[wheel]);
+	int measured_error;
+	int u;
+	//__bic_SR_register(GIE);
+	measured_error = wheel_desired_velocity[wheel] - wheel_measured_velocity[wheel];
+	u = (measured_error) + (controller_integrator[wheel]);
+	controller_integrator[wheel] += measured_error;
+	if (u > 127) u = 127;
+	if (u < -128) u = -128;
+	//__bis_SR_register(GIE);
+
+	update_pwm(wheel, u);
 }
+
+//u = measured_error >> 1 + controller_integrator[wheel] >> 1;
+
 
 void drive_tick()
 {
