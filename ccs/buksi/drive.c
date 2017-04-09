@@ -27,7 +27,10 @@ static signed char wheel_desired_velocity[WHEEL_COUNT] = { 0, 0 };
 
 static signed int controller_integrator[WHEEL_COUNT] = { 0, 0 };
 
-static const unsigned int speed_update_interval_mask = 0x1FF;
+static const unsigned int speed_update_interval_mask = 0xFF;
+
+static const float controller_P = 1;
+static const float controller_I = 0.8;
 
 void drive_setVelocity(const char velocities[2])
 {
