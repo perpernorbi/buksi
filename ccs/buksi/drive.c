@@ -106,10 +106,11 @@ static void control_pwm(unsigned char wheel)
 void drive_tick()
 {
 	encode(0);
-	//encode(1);
+	encode(1);
 	if (! (tick_counter & speed_update_interval_mask)) {
 		update_measured_velocity(0);
-		//update_measured_speed(1);
+		update_measured_velocity(1);
 		control_pwm(0);
+		control_pwm(1);
 	}
 }
