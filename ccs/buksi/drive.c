@@ -80,15 +80,24 @@ static void control_pwm(unsigned char wheel)
 {
 	int measured_error;
 	int u;
-	//__bic_SR_register(GIE);
 	measured_error = wheel_desired_velocity[wheel] - wheel_measured_velocity[wheel];
-	u = (measured_error) + (controller_integrator[wheel]);
-	controller_integrator[wheel] += measured_error;
-	if (u > 127) u = 127;
-	if (u < -128) u = -128;
-	//__bis_SR_register(GIE);
+	u = (controller_P * measured_error) + (controller_I * controller_integrator[wheel]);
 
-	update_pwm(wheel, u);
+	controller_integrator[wheel] += measured_error;
+	if (controller_integrator[wheel] > 127 / controller_I)
+		controller_integrator[wheel] = 127 / controller_I;
+	else if (controller_integrator[wheel] < -128 / controller_I)
+		controller_integrator[wheel] = -128 / controller_I;
+
+	if (wheel_desired_velocity[wheel] == 0) {
+		update_pwm(wheel, 0);
+		controller_integrator[wheel] = 0;
+	}
+	else {
+		if (u > 127) u = 127;
+		if (u < -128) u = -128;
+		update_pwm(wheel, u);
+	}
 }
 
 //u = measured_error >> 1 + controller_integrator[wheel] >> 1;
