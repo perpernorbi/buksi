@@ -115,5 +115,9 @@ void drive_tick()
 		update_measured_velocity(1);
 		control_pwm(0);
 		control_pwm(1);
+		if (wheel_desired_velocity[0] || wheel_desired_velocity[1])
+			P1OUT |= BIT7;
+		else
+			P1OUT &= ~BIT7;
 	}
 }
