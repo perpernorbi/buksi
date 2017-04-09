@@ -10,14 +10,13 @@ int main(void)
 	serial_initialize();
     while (1) {
     	__bis_SR_register(CPUOFF + GIE);
+
     	if (tick_get_and_clear()) {
         	drive_tick();
-
     		const char * dataframe = serial_getNextFrame();
     		if (dataframe)
     			drive_setVelocity(dataframe+1);
     	}
     }
-    
     return (0);
 }
