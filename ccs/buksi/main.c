@@ -3,6 +3,10 @@
 #include "serial.h"
 #include "tick.h"
 #include "drive.h"
+#include "leds.h"
+
+static const char velocityFrame = 0x80;
+static const char ledFrame = 0x81;
 
 int main(void)
 {
@@ -15,7 +19,12 @@ int main(void)
         	drive_tick();
     		const char * dataframe = serial_getNextFrame();
     		if (dataframe)
-    			drive_setVelocity(dataframe+1);
+    			if (dataframe[0] == velocityFrame)
+    				drive_setVelocity(dataframe+1);
+    			else if (dataframe[0] == ledFrame) {
+    				leds_set(dataframe[1]);
+    				leds_clear(dataframe[2]);
+    			}
     	}
     }
     return (0);
