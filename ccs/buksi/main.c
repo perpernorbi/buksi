@@ -12,13 +12,15 @@ int main(void)
 {
 	Grace_init();
 	serial_initialize();
+//	serial_test();
+//	return 0;
     while (1) {
     	__bis_SR_register(CPUOFF + GIE);
 
     	if (tick_get_and_clear()) {
         	drive_tick();
-    		const char * dataframe = serial_getNextFrame();
-    		if (dataframe)
+    		const char * dataframe;
+    		while (dataframe = serial_getNextFrame())
     			if (dataframe[0] == velocityFrame)
     				drive_setVelocity(dataframe+1);
     			else if (dataframe[0] == ledFrame) {

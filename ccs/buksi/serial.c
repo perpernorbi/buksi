@@ -12,7 +12,7 @@
 
 
 #define FRAME_SIZE 3
-#define RECEIVE_BUFFER_SIZE 10
+#define RECEIVE_BUFFER_SIZE 100
 static char receive_buffer[RECEIVE_BUFFER_SIZE];
 static const char* receive_readptr;
 static char* receive_writeptr;
@@ -23,6 +23,14 @@ static const char* send_readptr;
 static char* send_writeptr;
 
 static char * const init_send_ptr = send_buffer - 1;
+
+typedef enum {
+	receiver_state_control = 0,
+	receiver_state_data1 = 1,
+	receiver_state_data2 = 2
+} receiver_state;
+
+receiver_state receiver_state_machine = receiver_state_control;
 
 inline void initialize_sendptrs()
 {
@@ -41,6 +49,9 @@ void serial_receiveByte(char data)
 {
 	unsigned short gie = _get_SR_register() & GIE;
 	__bic_SR_register(GIE);
+	if ((receiver_state_machine == receiver_state_control) && ((data & 0x80) != 0x80)) return;
+	if (receiver_state_machine == receiver_state_data2) receiver_state_machine = receiver_state_control;
+	else ++receiver_state_machine;
 	(*receive_writeptr) = data;
 	++receive_writeptr;
 	__bis_SR_register(gie);
@@ -95,9 +106,12 @@ const char * serial_getNextFrame()
 		return NULL;
 	}
 	if (receive_readptr + FRAME_SIZE <= receive_writeptr) {
+		const char * retval = receive_readptr;
+		receive_readptr += FRAME_SIZE - 1;
 		__bis_SR_register(gie);
-		return receive_readptr;
+		return retval;
 	} else {
+		--receive_readptr;
 		__bis_SR_register(gie);
 		return NULL;
 	}
@@ -111,4 +125,15 @@ const char * serial_getNextCharToSend()
 		return NULL;
 	}
 	return send_readptr;
+}
+
+void serial_test()
+{
+	__bic_SR_register(GIE);
+	serial_receiveByte(0x81);
+	serial_receiveByte(0x40);
+	serial_getNextFrame();
+	serial_receiveByte(0x80);
+	serial_getNextFrame();
+	serial_getNextFrame();
 }
