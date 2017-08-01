@@ -7,6 +7,7 @@
 extern void GPIO_graceInit(void);
 extern void BCSplus_graceInit(void);
 extern void USCI_A0_graceInit(void);
+extern void ADC10_graceInit(void);
 extern void InterruptVectors_graceInit(void);
 extern void Timer0_A3_graceInit(void);
 extern void Timer1_A3_graceInit(void);
@@ -52,6 +53,9 @@ void Grace_init(void)
 
     /* initialize Config for the MSP430 USCI_A0 */
     USCI_A0_graceInit();
+
+    /* initialize Config for the MSP430 10-bit Analog to Digital Converter (ADC) */
+    ADC10_graceInit();
 
     /* initialize Interrupt vector support */
     InterruptVectors_graceInit();

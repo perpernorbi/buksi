@@ -9,6 +9,7 @@
 #define DRIVE_H_
 
 void drive_setVelocity(const char velocities[2]);
+const signed char* drive_getVelocities();
 void drive_tick();
 
 #endif /* DRIVE_H_ */

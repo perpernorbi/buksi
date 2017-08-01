@@ -29,7 +29,7 @@ static signed int controller_integrator[WHEEL_COUNT] = { 0, 0 };
 
 static const unsigned int speed_update_interval_mask = 0xFF;
 
-static const float controller_P = 1;
+static const float controller_P = 2.2;
 static const float controller_I = 0.8;
 
 void drive_setVelocity(const char velocities[2])
@@ -40,11 +40,15 @@ void drive_setVelocity(const char velocities[2])
 		//Dimension conversion must be done here, if necessary
 }
 
+const signed char* drive_getVelocities()
+{
+	return wheel_measured_velocity;
+}
+
 static void update_measured_velocity(unsigned char wheel_id)
 {
 	wheel_measured_velocity[wheel_id] = wheel_position[wheel_id] - wheel_velocity_last_position[wheel_id];
 	wheel_velocity_last_position[wheel_id] = wheel_position[wheel_id];
-	serial_sendChar(wheel_measured_velocity[wheel_id]);
 }
 
 static void encode(unsigned char wheel_id)
