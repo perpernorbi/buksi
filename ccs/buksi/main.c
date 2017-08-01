@@ -8,6 +8,7 @@
 
 static const char velocityFrame = 0x80;
 static const char ledFrame = 0x81;
+static const char directDriveFrame = 0x82;
 
 void send_status_over_uart()
 {
@@ -34,7 +35,9 @@ int main(void)
     		const char * dataframe;
     		while (dataframe = serial_getNextFrame())
     			if (dataframe[0] == velocityFrame)
-    				drive_setVelocity(dataframe+1);
+    				drive_setVelocity(dataframe+1, DRIVE_VELOCITY);
+    			else if (dataframe[0] == directDriveFrame)
+    				drive_setVelocity(dataframe+1, DRIVE_DIRECT);
     			else if (dataframe[0] == ledFrame) {
     				leds_set(dataframe[1]);
     				leds_clear(dataframe[2]);

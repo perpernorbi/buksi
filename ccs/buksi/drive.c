@@ -10,6 +10,7 @@
 
 #include "serial.h"
 #include "tick.h"
+#include "drive.h"
 
 #define WHEEL_COUNT 2
 static volatile unsigned char const * const wheel_encoder_port[WHEEL_COUNT] = { &P2IN, &P2IN };
@@ -32,9 +33,12 @@ static const unsigned int speed_update_interval_mask = 0xFF;
 static const float controller_P = 2.2;
 static const float controller_I = 0.8;
 
-void drive_setVelocity(const char velocities[2])
+static drive_mode wheel_drive_mode;
+
+void drive_setVelocity(const char velocities[2], drive_mode mode)
 {
 	unsigned char i;
+	wheel_drive_mode = mode;
 	for (i = 0; i < 2; ++i)
 		wheel_desired_velocity[i] = velocities[i];
 		//Dimension conversion must be done here, if necessary
@@ -117,8 +121,14 @@ void drive_tick()
 	if (! (tick_counter & speed_update_interval_mask)) {
 		update_measured_velocity(0);
 		update_measured_velocity(1);
-		control_pwm(0);
-		control_pwm(1);
+		if (wheel_drive_mode == DRIVE_VELOCITY) {
+			control_pwm(0);
+			control_pwm(1);
+		}
+		if (wheel_drive_mode == DRIVE_DIRECT) {
+			update_pwm(0, wheel_desired_velocity[0] << 2);
+			update_pwm(1, wheel_desired_velocity[1] << 2);
+		}
 		if (wheel_desired_velocity[0] || wheel_desired_velocity[1])
 			P1OUT |= BIT7;
 		else
