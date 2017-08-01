@@ -28,6 +28,7 @@ some pictures of cats.
 #include "cgiwebsocket.h"
 #include "cgi-test.h"
 #include "json.h"
+#include <jsonparse.h>
 
 //The example can print out the heap use every 3 seconds. You can use this to catch memory leaks.
 //#define SHOW_HEAP_USE
@@ -92,14 +93,24 @@ int ICACHE_FLASH_ATTR cgiWiFiStatus (HttpdConnData *connData)
 
 
 void wsDriveRecv(Websock *ws, char *data, int len, int flags) {
-    char buff[128];
-    len = (len < 128) ? len : 128;
-    size_t i;
-    for (i=0; (i < len) && (i < 128); ++i) buff[i] = data[i];
-    buff[i] = '\0';
-    os_printf("Received in websocket %s\n", buff);
-    if (len > 0)
-    onOffDrive(data[0]);
+    struct jsonparse_state json_state;
+    int retval = 0;
+    jsonparse_setup(&json_state, data, len);
+    while ((retval = jsonparse_next(&json_state)) != JSON_TYPE_ERROR) {
+        if (retval == JSON_TYPE_PAIR_NAME) {
+            char tmp[128];
+            jsonparse_copy_value(&json_state, tmp, 128);
+            os_printf("name: %s\n", tmp);
+        }
+        if (retval == JSON_TYPE_STRING) {
+            char tmp[128];
+            jsonparse_copy_value(&json_state, tmp, 128);
+            os_printf("string: %s\n", tmp);
+        }
+        os_printf("jsonparse_next returned %d: %c\n", retval, retval);
+    }
+
+    //onOffDrive(data[0]);
     //cgiWebsocketSend(ws, buff, strlen(buff), WEBSOCK_FLAG_NONE);
 }
 
