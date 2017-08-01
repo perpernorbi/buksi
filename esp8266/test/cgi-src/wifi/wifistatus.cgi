@@ -1,0 +1,9 @@
+{
+"WiFiMode":"Client",
+"currSsid":"lovarda",
+"network":{
+"ip":"192.168.10.163",
+"gw":"192.168.10.1",
+"netmask":"255.255.255.0"
+}
+}

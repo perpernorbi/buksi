@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+
+<meta charset="utf-8" />
+
+<title>WebSocket Test</title>
+
+<script language="javascript" type="text/javascript">
+
+  //var wsUri = "ws://"+window.location.host+"/websocket/ws.cgi";
+  var wsUri = "ws://192.168.10.237/drive-ws.cgi";
+  var output;
+
+  function init()
+  {
+    output = document.getElementById("output");
+    testWebSocket();
+  }
+
+  function testWebSocket()
+  {
+    websocket = new WebSocket(wsUri);
+    websocket.onopen = function(evt) { onOpen(evt) };
+    websocket.onclose = function(evt) { onClose(evt) };
+    websocket.onmessage = function(evt) { onMessage(evt) };
+    websocket.onerror = function(evt) { onError(evt) };
+  }
+
+  function onOpen(evt)
+  {
+    writeToScreen("CONNECTED");
+    doSend("s");
+  }
+
+  function onClose(evt)
+  {
+    writeToScreen("DISCONNECTED");
+  }
+
+  function onMessage(evt)
+  {
+    writeToScreen('<span style="color: blue;">RECEIVED: ' + evt.data+'</span>');
+//    websocket.close();
+  }
+
+  function onError(evt)
+  {
+    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+  }
+
+  function doSend(message)
+  {
+    writeToScreen("SENT: " + message);
+    websocket.send(message);
+  }
+
+  function writeToScreen(message)
+  {
+    var pre = document.createElement("p");
+    pre.style.wordWrap = "break-word";
+    pre.innerHTML = message;
+    output.appendChild(pre);
+  }
+
+  window.addEventListener("load", init, false);
+
+</script>
+
+<style>
+#joystick {
+    width		: 600px;
+    height		: 600px;
+    padding		: 0;
+    margin		: 0;
+    -webkit-user-select	: none;
+    -moz-user-select	: none;
+}
+</style>
+
+<h2>WebSocket Test</h2>
+ <button onclick="doSend('s')">Stop</button>
+ <button onclick="doSend('f')">Forward</button>
+ <button onclick="doSend('b')">Backward</button>
+ <button onclick="doSend('l')">Left</button>
+ <button onclick="doSend('r')">Right</button>
+<div id="joystick"></div>
+<div id="result"></div>
+
+<script src="virtualjoystick.js"></script>
+<script>
+ console.log("touchscreen is", VirtualJoystick.touchScreenAvailable() ? "available" : "not available");
+
+ var joystick	= new VirtualJoystick({
+  container	: document.getElementById('joystick'),
+  mouseSupport	: true,
+ });
+ joystick.addEventListener('touchStart', function(){
+  console.log('down')
+ })
+ joystick.addEventListener('touchEnd', function(){
+  console.log('up')
+  doSend('s')
+ })
+
+ setInterval(function(){
+  if (joystick.right()) doSend('r')
+  if (joystick.left()) doSend('l')
+  if (joystick.up()) doSend('f')
+  if (joystick.down()) doSend('b')
+  var outputEl	= document.getElementById('result');
+                outputEl.innerHTML	= '<b>Result:</b> '
+                    + ' dx:'+joystick.deltaX()
+                    + ' dy:'+joystick.deltaY()
+                    + (joystick.right()	? ' right'	: '')
+                    + (joystick.up()	? ' up'		: '')
+                    + (joystick.left()	? ' left'	: '')
+                    + (joystick.down()	? ' down' 	: '')
+            }, 1/30 * 1000);
+        </script>
+<div id="output"></div>
