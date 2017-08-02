@@ -28,7 +28,7 @@ some pictures of cats.
 #include "cgiwebsocket.h"
 #include "cgi-test.h"
 #include "json.h"
-#include <jsonparse.h>
+#include "jsonparse/jsonparse.h"
 
 //The example can print out the heap use every 3 seconds. You can use this to catch memory leaks.
 //#define SHOW_HEAP_USE
@@ -91,23 +91,54 @@ int ICACHE_FLASH_ATTR cgiWiFiStatus (HttpdConnData *connData)
     return HTTPD_CGI_DONE;
 }
 
+int jsonparse_assert_next(struct jsonparse_state *state, int expected_json_type)
+{
+    int type;
+    type = jsonparse_next(state);
 
+    if (type != expected_json_type) {
+        os_printf("Expected json type %c 0x%x",
+                  expected_json_type, expected_json_type);
+        os_printf(", got %c 0x%x\n", type, type);
+        state->error = JSON_ERROR_SYNTAX;
+    }
+    return type;
+}
+
+
+/*
+{
+    "drive_mode": "direct",
+    "velocities": [10, 10]
+}
+*/
 void wsDriveRecv(Websock *ws, char *data, int len, int flags) {
     struct jsonparse_state json_state;
     int retval = 0;
+    int direct_drive = 0;
+    int left, right;
     jsonparse_setup(&json_state, data, len);
     while ((retval = jsonparse_next(&json_state)) != JSON_TYPE_ERROR) {
         if (retval == JSON_TYPE_PAIR_NAME) {
-            char tmp[128];
-            jsonparse_copy_value(&json_state, tmp, 128);
-            os_printf("name: %s\n", tmp);
+            if (jsonparse_strcmp_value(&json_state, "drive_mode") == 0) {
+                jsonparse_assert_next(&json_state, JSON_TYPE_STRING);
+                direct_drive = ! jsonparse_strcmp_value(&json_state, "direct");
+            } else if (jsonparse_strcmp_value(&json_state, "velocities") == 0) {
+                jsonparse_assert_next(&json_state, JSON_TYPE_ARRAY);
+                jsonparse_assert_next(&json_state, JSON_TYPE_NUMBER);
+                left = jsonparse_get_value_as_int(&json_state);
+                jsonparse_assert_next(&json_state, ',');
+                jsonparse_assert_next(&json_state, JSON_TYPE_NUMBER);
+                right = jsonparse_get_value_as_int(&json_state);
+                jsonparse_assert_next(&json_state, ']');
+            }
         }
-        if (retval == JSON_TYPE_STRING) {
-            char tmp[128];
-            jsonparse_copy_value(&json_state, tmp, 128);
-            os_printf("string: %s\n", tmp);
-        }
-        os_printf("jsonparse_next returned %d: %c\n", retval, retval);
+
+    }
+
+    if (direct_drive) {
+        os_printf("drive %d, %d", left, right);
+        sendDirectVelocity(left, right);
     }
 
     //onOffDrive(data[0]);
@@ -151,8 +182,7 @@ should be placed above the URLs they protect.
 */
 HttpdBuiltInUrl builtInUrls[]={
     {"*", cgiRedirectApClientToHostname, "esp8266.nonet"},
-    {"/", cgiRedirect, "/index.tpl"},
-    {"/index.tpl", cgiEspFsTemplate, tplIndex},
+    {"/", cgiRedirect, "/index.html"},
     {"/led.cgi", cgiLed, NULL},
     {"/drive.cgi", cgiDrive, NULL},
 #ifdef INCLUDE_FLASH_FNS

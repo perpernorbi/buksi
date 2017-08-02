@@ -4,4 +4,4 @@ libesphttpd/espfs
 libesphttpd/include
 libesphttpd/lib/heatshrink
 user
-../esp-open-sdk/ESP8266_NONOS_SDK_V2.0.0_16_08_10/include
+../../esp-open-sdk/ESP8266_NONOS_SDK_V2.0.0_16_08_10/include

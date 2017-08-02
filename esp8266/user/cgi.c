@@ -20,29 +20,37 @@ flash as a binary. Also handles the hit counter on the main page.
 
 static const char speed = 0x09;
 
-void ICACHE_FLASH_ATTR sendSpeed(char left, char right)
+void ICACHE_FLASH_ATTR sendVelocity(char left, char right)
 {
-    char crc = left + right + 0x80;
-    os_printf("%c%c%c%c", 0x80, left, right, crc);
+    char startByte = 0x80;
+    char crc = left + right + startByte;
+    os_printf("%c%c%c%c", startByte, left, right, crc);
+}
+
+void ICACHE_FLASH_ATTR sendDirectVelocity(char left, char right)
+{
+    char startByte = 0x82;
+    char crc = left + right + startByte;
+    os_printf("%c%c%c%c", startByte, left, right, crc);
 }
 
 void ICACHE_FLASH_ATTR onOffDrive(char d)
 {
     switch (d) {
     case 'f':
-        sendSpeed(+speed, +speed);
+        sendVelocity(+speed, +speed);
         break;
     case 'b':
-        sendSpeed(-speed, -speed);
+        sendVelocity(-speed, -speed);
         break;
     case 'l':
-        sendSpeed(+speed, -speed);
+        sendVelocity(+speed, -speed);
         break;
     case 'r':
-        sendSpeed(-speed, +speed);
+        sendVelocity(-speed, +speed);
         break;
     case 's':
-        sendSpeed(0, 0);
+        sendVelocity(0, 0);
         break;
     }
 }

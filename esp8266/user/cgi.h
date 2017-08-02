@@ -7,5 +7,7 @@ int cgiLed(HttpdConnData *connData);
 int cgiDrive(HttpdConnData *connData);
 int tplIndex(HttpdConnData *connData, char *token, void **arg);
 void onOffDrive(char d);
+void sendDirectVelocity(char left, char right);
+
 
 #endif

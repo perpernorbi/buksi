@@ -67,3 +67,6 @@ user/json.c
 user/json.h
 html/index.html
 html/virtualjoystick.js
+user/jsonparse/json.h
+user/jsonparse/jsonparse.c
+user/jsonparse/jsonparse.h
