@@ -1,131 +1,146 @@
-<!DOCTYPE html>
-
-<meta charset="utf-8" />
-
-<title>WebSocket Test</title>
-
-<script language="javascript" type="text/javascript">
-
-  var wsUri = "ws://"+window.location.host+"/drive-ws.cgi";
-
-  var output;
-
-  function init()
-  {
+<html>
+ <head>
+  <meta charset="utf-8" />
+  <title>WebSocket Test</title>
+  <script language="javascript" type="text/javascript">
+   var wsUri = "ws://"+window.location.host+"/drive-ws.cgi";
+   var output;
+   function init()
+   {
     output = document.getElementById("output");
     testWebSocket();
-  }
+   }
 
-  function testWebSocket()
-  {
+   function testWebSocket()
+   {
     websocket = new WebSocket(wsUri);
     websocket.onopen = function(evt) { onOpen(evt) };
     websocket.onclose = function(evt) { onClose(evt) };
     websocket.onmessage = function(evt) { onMessage(evt) };
     websocket.onerror = function(evt) { onError(evt) };
-  }
+   }
 
-  function onOpen(evt)
-  {
+   function onOpen(evt)
+   {
     writeToScreen("CONNECTED");
     doSend("s");
-  }
+   }
 
-  function onClose(evt)
-  {
+   function onClose(evt)
+   {
     writeToScreen("DISCONNECTED");
-  }
+   }
 
-  function onMessage(evt)
-  {
+   function onMessage(evt)
+   {
     writeToScreen('<span style="color: blue;">RECEIVED: ' + evt.data+'</span>');
-//    websocket.close();
-  }
+   }
 
-  function onError(evt)
-  {
+   function onError(evt)
+   {
     writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
-  }
+   }
 
-  function doSend(message)
-  {
-    writeToScreen("SENT: " + message);
-    websocket.send(message);
-  }
+    var lastMessage = "";
 
-  function writeToScreen(message)
-  {
+   function doSend(message)
+   {
+     if (message != lastMessage) {
+      writeToScreen("SENT: " + message);
+      websocket.send(message);
+      lastMessage = message;
+     }
+   }
+
+   function writeToScreen(message)
+   {
     output.innerHTML = "<p>" + message + "</p>";
-  }
+   }
 
-  window.addEventListener("load", init, false);
+   window.addEventListener("load", init, false);
+  </script>
 
-</script>
-
-<style>
-#joystick {
+  <style>
+   body {
+    overflow	: hidden;
+    padding		: 0;
+    margin		: 0;
+    background-color: #BBB;
+   }
+   #info {
+    position	: absolute;
+    top		: 0px;
     width		: 100%;
-    height		: 600px;
+    padding		: 5px;
+    text-align	: left;
+    font-size   : small;
+   }
+   #joystick {
+    width		: 100%;
+    height		: 100%;
+    overflow	: hidden;
     padding		: 0;
     margin		: 0;
     -webkit-user-select	: none;
     -moz-user-select	: none;
     background-color: lightgray;
-}
-</style>
+   }
+  </style>
+ </head>
+ <body>
+  <div id="joystick"></div>
+  <div id="info">
+   <h2>Touch to drive Buksi</h2>
+   <div id="result"></div>
+   <div id="output"></div>
+  </div>
 
-<h2>WebSocket Test</h2>
- <button onclick="doSend('s')">Stop</button>
- <button onclick="doSend('f')">Forward</button>
- <button onclick="doSend('b')">Backward</button>
- <button onclick="doSend('l')">Left</button>
- <button onclick="doSend('r')">Right</button>
-<div id="joystick"></div>
-<div id="result"></div>
+  <script src="virtualjoystick.js"></script>
+  <script>
+    var joystickDenominator = 1;
+    function calculateDenominator() {
+     var h = document.getElementById('joystick').clientHeight;
+     var w = document.getElementById('joystick').clientWidth;
+     var d = (h > w) ? w : h;
+     joystickDenominator = d / 80;
+    }
+   var stopMessage = {"drive_mode": "direct", "velocities": [0,0] };
+   console.log("touchscreen is", VirtualJoystick.touchScreenAvailable() ? "available" : "not available");
 
-<script src="virtualjoystick.js"></script>
-<script>
- var stopMessage = {"drive_mode": "direct", "velocities": [0,0] };
- console.log("touchscreen is", VirtualJoystick.touchScreenAvailable() ? "available" : "not available");
+   var joystick	= new VirtualJoystick({
+    container	: document.getElementById('joystick'),
+    mouseSupport	: true,
+   });
+   joystick.addEventListener('touchEnd', function(){
+    doSend(JSON.stringify(stopMessage))
+   })
 
- var joystick	= new VirtualJoystick({
-  container	: document.getElementById('joystick'),
-  mouseSupport	: true,
- });
- joystick.addEventListener('touchStart', function(){
-  console.log('down')
- })
- joystick.addEventListener('touchEnd', function(){
-  console.log('up')
-  doSend(JSON.stringify(stopMessage))
- })
+   calculateDenominator();
+   window.addEventListener("orientationchange", calculateDenominator);
 
- setInterval(function(){
-  //if (joystick.right()) doSend('r')
-  //if (joystick.left()) doSend('l')
-  //if (joystick.up()) doSend('f')
-  //if (joystick.down()) doSend('b')
-  var message = stopMessage;
-  var x = joystick.deltaX()/12;
-  var y = joystick.deltaY()/12;
-  var l = - x - y;
-  var r = x - y;
-  if (l > 31) l = 31;
-  if (l < -31) l = -31;
-  if (r > 31) r = 31;
-  if (r < -31) r = -31;
-  message.velocities[0] = Math.round(l);
-  message.velocities[1] = Math.round(r);
-  doSend(JSON.stringify(message))
+   setInterval(function(){
+    var message = stopMessage;
+    var x = joystick.deltaX()/joystickDenominator;
+    var y = joystick.deltaY()/joystickDenominator;
+    var l = - x - y;
+    var r = x - y;
+    if (l > 31) l = 31;
+    if (l < -31) l = -31;
+    if (r > 31) r = 31;
+    if (r < -31) r = -31;
+    message.velocities[0] = Math.round(l);
+    message.velocities[1] = Math.round(r);
+    doSend(JSON.stringify(message))
 
-  var outputEl	= document.getElementById('result');
-                outputEl.innerHTML	= '<b>Result:</b> '
+    var outputEl	= document.getElementById('result');
+    outputEl.innerHTML = '<b>Result:</b> '
                     + ' dx:'+joystick.deltaX()
                     + ' dy:'+joystick.deltaY()
                     + (joystick.right()	? ' right'	: '')
                     + (joystick.up()	? ' up'		: '')
                     + (joystick.left()	? ' left'	: '')
                     + (joystick.down()	? ' down' 	: '')
-            }, 50);
-        </script>
-<div id="output"></div>
+   }, 50);
+  </script>
+ </body>
+</html>
