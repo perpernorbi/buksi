@@ -120,8 +120,8 @@
 
    setInterval(function(){
     var message = stopMessage;
-    var x = joystick.deltaX()/joystickDenominator;
     var y = joystick.deltaY()/joystickDenominator;
+    var x = -y*(joystick.deltaX()/(joystickDenominator*30));
     var l = - x - y;
     var r = x - y;
     if (l > 31) l = 31;
