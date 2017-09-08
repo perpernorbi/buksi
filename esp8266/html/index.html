@@ -52,6 +52,11 @@
      }
    }
 
+   function toggleLights()
+   {
+     websocket.send("toggle_lights");
+   }
+
    function writeToScreen(message)
    {
     output.innerHTML = "<p>" + message + "</p>";
@@ -93,6 +98,7 @@
    <h2>Touch to drive Buksi</h2>
    <div id="result"></div>
    <div id="output"></div>
+   <button onclick="toggleLights()">Lights</button>
   </div>
 
   <script src="virtualjoystick.js"></script>
