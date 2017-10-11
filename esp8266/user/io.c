@@ -10,12 +10,23 @@
 
 
 #include <esp8266.h>
+#include <pwm.h>
 
 #define MOTOR_SHIELD
 #define LEDGPIO FUNC_GPIO2
 #define BTNGPIO FUNC_GPIO0
 
-#ifndef MOTOR_SHIELD
+#ifdef MOTOR_SHIELD
+#define PWM_A_OUT_IO_MUX PERIPHS_IO_MUX_GPIO5_U
+#define PWM_A_OUT_IO_NUM 5
+#define PWM_A_OUT_IO_FUNC  FUNC_GPIO5
+
+#define PWM_B_OUT_IO_MUX PERIPHS_IO_MUX_GPIO4_U
+#define PWM_B_OUT_IO_NUM 4
+#define PWM_B_OUT_IO_FUNC  FUNC_GPIO4
+
+#define PWM_CHANNEL_COUNT 2
+#else
 static ETSTimer resetBtntimer;
 #endif
 
@@ -41,35 +52,26 @@ void ICACHE_FLASH_ATTR ioLed(int ena) {
 #endif
 }
 
-void gpio_right_forward()
+void ICACHE_FLASH_ATTR io_set_pwm(int left, int right)
 {
-    gpio_output_set((1<<5), (1<<0), (1<<0) | (1<<5), 0);
+    if (left > 0)
+        gpio_output_set(0, 1<<0, 0, 0);
+    else
+        gpio_output_set(1<<0, 0, 0, 0);
+    left = (left >= 0) ? left : -left;
+    left <<= 15;
+    pwm_set_duty(left, 1);
 
-}
+    if (right > 0)
+        gpio_output_set(0, 1<<2, 0, 0);
+    else
+        gpio_output_set(1<<2, 0, 0, 0);
 
-void gpio_right_stop()
-{
-    gpio_output_set(0, (1<<5), (1<<0) | (1<<5), 0);
-}
+    right = (right >= 0) ? right : -right;
+    right <<= 15;
+    pwm_set_duty(right, 0);
+    pwm_start();
 
-void gpio_right_backward()
-{
-    gpio_output_set((1<<0) | (1<<5), 0, (1<<0) | (1<<5), 0);
-}
-
-void gpio_left_forward()
-{
-    gpio_output_set((1<<4), (1<<2), (1<<2) | (1<<4), 0);
-}
-
-void gpio_left_stop()
-{
-    gpio_output_set(0, (1<<4), (1<<0) | (1<<4), 0);
-}
-
-void gpio_left_backward()
-{
-    gpio_output_set((1<<2) | (1<<4), 0, (1<<2) | (1<<4), 0);
 }
 
 uint8_t ICACHE_FLASH_ATTR ioGetLed()
@@ -103,18 +105,35 @@ static void ICACHE_FLASH_ATTR resetBtnTimerCb(void *arg) {
 #endif
 
 #ifdef MOTOR_SHIELD
-void ioInit() {
+
+
+
+void ICACHE_FLASH_ATTR pwmInit()
+{
+    uint32 io_info[][3] = {
+        {PWM_A_OUT_IO_MUX,PWM_A_OUT_IO_FUNC,PWM_A_OUT_IO_NUM},
+        {PWM_B_OUT_IO_MUX,PWM_B_OUT_IO_FUNC,PWM_B_OUT_IO_NUM}
+    };
+
+    uint32 pwm_duty_init[2] = {0, 0};
+    pwm_init(47186,  pwm_duty_init, 2, io_info);
+
+    pwm_start();
+}
+
+void ICACHE_FLASH_ATTR ioInit() {
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO4_U, FUNC_GPIO4);
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO5_U, FUNC_GPIO5);
-    gpio_output_set(0, 0, (1<<0) | (1<<2) | (1<<4) | (1<<5), 0);
+    gpio_output_set(0, 0, (1<<0) | (1<<2), 0);
     //os_timer_disarm(&resetBtntimer);
     //os_timer_setfn(&resetBtntimer, resetBtnTimerCb, NULL);
     //os_timer_arm(&resetBtntimer, 100, 1);
+    pwmInit();
 }
+
+
 #else
-void ioInit() {
+void ICACHE_FLASH_ATTR ioInit() {
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2);
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
     gpio_output_set(0, 0, (1<<LEDGPIO), (1<<BTNGPIO));

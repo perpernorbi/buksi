@@ -31,27 +31,7 @@ void ICACHE_FLASH_ATTR sendVelocity(char left, char right)
 void ICACHE_FLASH_ATTR sendDirectVelocity(int left, int right)
 {
 #ifdef MOTOR_SHIELD
-    os_printf("\nleft %d", left);
-    if (left > 10) {
-        gpio_left_forward();
-        os_printf("\nleft forward\n");
-    }
-    else if (left > -10) {
-        gpio_left_stop();
-        os_printf("\nleft stop\n");
-    }
-    else {
-        gpio_left_backward();
-        os_printf("\nleft backward\n");
-    }
-
-    if (right > 10)
-        gpio_right_forward();
-    else if (right > -10)
-        gpio_right_stop();
-    else
-        gpio_right_backward();
-
+    io_set_pwm(left, right);
 #else
     char startByte = 0x82;
     char crc = left + right + startByte;

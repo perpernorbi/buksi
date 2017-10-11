@@ -8,7 +8,7 @@
 OUTPUT_TYPE=ota
 
 #SPI flash size, in K
-ESP_SPI_FLASH_SIZE_K=1024
+ESP_SPI_FLASH_SIZE_K=4096
 #0: QIO, 1: QOUT, 2: DIO, 3: DOUT
 ESP_FLASH_MODE=0
 #0: 40MHz, 1: 26MHz, 2: 20MHz, 15: 80MHz
@@ -55,12 +55,12 @@ MODULES		= user user/jsonparse
 EXTRA_INCDIR	= include libesphttpd/include
 
 # libraries used in this project, mainly provided by the SDK
-LIBS		= c gcc hal phy pp net80211 wpa main lwip crypto
+LIBS		= c gcc hal phy pp net80211 wpa main lwip crypto pwm
 #Add in esphttpd lib
 LIBS += esphttpd
 
 # compiler flags using during compilation of source files
-CFLAGS		= -Os -ggdb -std=gnu99 -Werror -Wpointer-arith -Wundef -Wall -Wl,-EL -fno-inline-functions \
+CFLAGS		= -Os -std=gnu99 -Werror -Wpointer-arith -Wundef -Wall -Wl,-EL -fno-inline-functions \
 		-nostdlib -mlongcalls -mtext-section-literals  -D__ets__ -DICACHE_FLASH \
 		-Wno-address
 
