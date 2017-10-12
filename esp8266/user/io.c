@@ -25,29 +25,29 @@ static ETSTimer resetBtntimer;
 #define PWM_B_OUT_IO_FUNC FUNC_GPIO4
 
 #define DIR_A_OUT_IO_MUX  PERIPHS_IO_MUX_GPIO0_U
-#define DIR_A_OUT_IO_NUM  0
+#define DIR_A_OUT_IO_BIT  BIT0
 #define DIR_A_OUT_IO_FUNC FUNC_GPIO0
 
 #define DIR_B_OUT_IO_MUX  PERIPHS_IO_MUX_GPIO2_U
-#define DIR_B_OUT_IO_NUM  2
+#define DIR_B_OUT_IO_BIT  BIT2
 #define DIR_B_OUT_IO_FUNC FUNC_GPIO2
 
 #define BTN_GPIO_MUX  PERIPHS_IO_MUX_MTDI_U
-#define BTN_GPIO_NUM  12
+#define BTN_GPIO_BIT  BIT12
 #define BTN_GPIO_FUNC FUNC_GPIO12
 
 #define LED_GPIO_MUX  PERIPHS_IO_MUX_MTMS_U
-#define LED_GPIO_NUM  14
+#define LED_GPIO_BIT  BIT14
 #define LED_GPIO_FUNC FUNC_GPIO14
 
 #define PWM_CHANNEL_COUNT 2
 #else
 #define BTN_GPIO_MUX  PERIPHS_IO_MUX_GPIO0_U
-#define BTN_GPIO_NUM  0
+#define BTN_GPIO_BIT  BIT0
 #define BTN_GPIO_FUNC FUNC_GPIO0
 
 #define LED_GPIO_MUX  PERIPHS_IO_MUX_GPIO2_U
-#define LED_GPIO_NUM  2
+#define LED_GPIO_BIT  BIT2
 #define LED_GPIO_FUNC FUNC_GPIO2
 #endif
 
@@ -62,10 +62,10 @@ void ICACHE_FLASH_ATTR ioLedChangeHandler(void (*f)(void))
 void ICACHE_FLASH_ATTR ioLed(int ena) {
     //gpio_output_set is overkill. ToDo: use better mactos
     if (ena) {
-        gpio_output_set((1<<LED_GPIO_NUM), 0, (1<<LED_GPIO_NUM), 0);
+        gpio_output_set(LED_GPIO_BIT, 0, 0, 0);
         ledState = 1;
     } else {
-        gpio_output_set(0, (1<<LED_GPIO_NUM), (1<<LED_GPIO_NUM), 0);
+        gpio_output_set(0, LED_GPIO_BIT, 0, 0);
         ledState = 0;
     }
     statusChangeHandler();
@@ -75,17 +75,17 @@ void ICACHE_FLASH_ATTR io_set_pwm(int left, int right)
 {
 #ifdef MOTOR_SHIELD
     if (left > 0)
-        gpio_output_set(0, 1<<DIR_A_OUT_IO_NUM, 0, 0);
+        gpio_output_set(0, DIR_A_OUT_IO_BIT, 0, 0);
     else
-        gpio_output_set(1<<DIR_A_OUT_IO_NUM, 0, 0, 0);
+        gpio_output_set(DIR_A_OUT_IO_BIT, 0, 0, 0);
     left = (left >= 0) ? left : -left;
     left <<= 15;
     pwm_set_duty(left, 1);
 
     if (right > 0)
-        gpio_output_set(0, 1<<DIR_B_OUT_IO_NUM, 0, 0);
+        gpio_output_set(0, DIR_B_OUT_IO_BIT, 0, 0);
     else
-        gpio_output_set(1<<DIR_B_OUT_IO_NUM, 0, 0, 0);
+        gpio_output_set(DIR_B_OUT_IO_BIT, 0, 0, 0);
 
     right = (right >= 0) ? right : -right;
     right <<= 15;
@@ -106,7 +106,7 @@ void ICACHE_FLASH_ATTR ioLedToggle()
 
 static void ICACHE_FLASH_ATTR resetBtnTimerCb(void *arg) {
     static int resetCnt=0;
-    if (!GPIO_INPUT_GET(BTN_GPIO_NUM)) {
+    if (!(gpio_input_get() & BTN_GPIO_BIT)) {
         resetCnt++;
     } else {
         if (resetCnt>=30) { //3 sec pressed
@@ -130,7 +130,7 @@ void ICACHE_FLASH_ATTR pwmInit()
 #ifdef MOTOR_SHIELD
     PIN_FUNC_SELECT(DIR_A_OUT_IO_MUX, DIR_A_OUT_IO_FUNC);
     PIN_FUNC_SELECT(DIR_B_OUT_IO_MUX, DIR_B_OUT_IO_FUNC);
-    gpio_output_set(0, 0, (1<<DIR_A_OUT_IO_NUM) | (1<<DIR_B_OUT_IO_NUM), 0);
+    gpio_output_set(0, 0, DIR_A_OUT_IO_BIT | DIR_B_OUT_IO_BIT, 0);
     uint32 io_info[][3] = {
         {PWM_A_OUT_IO_MUX,PWM_A_OUT_IO_FUNC,PWM_A_OUT_IO_NUM},
         {PWM_B_OUT_IO_MUX,PWM_B_OUT_IO_FUNC,PWM_B_OUT_IO_NUM}
@@ -145,7 +145,7 @@ void ICACHE_FLASH_ATTR pwmInit()
 void ICACHE_FLASH_ATTR ioInit() {
     PIN_FUNC_SELECT(LED_GPIO_MUX, LED_GPIO_FUNC);
     PIN_FUNC_SELECT(BTN_GPIO_MUX, BTN_GPIO_FUNC);
-    gpio_output_set(0, 0, (1<<LED_GPIO_NUM), (1<<BTN_GPIO_NUM));
+    gpio_output_set(0, 0, LED_GPIO_BIT, BTN_GPIO_BIT);
     os_timer_disarm(&resetBtntimer);
     os_timer_setfn(&resetBtntimer, resetBtnTimerCb, NULL);
     os_timer_arm(&resetBtntimer, 100, 1);
