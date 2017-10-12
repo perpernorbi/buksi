@@ -17,7 +17,6 @@ flash as a binary. Also handles the hit counter on the main page.
 #include "cgi.h"
 #include "io.h"
 #include "json.h"
-#define MOTOR_SHIELD
 
 static const char speed = 0x09;
 
@@ -30,13 +29,10 @@ void ICACHE_FLASH_ATTR sendVelocity(char left, char right)
 
 void ICACHE_FLASH_ATTR sendDirectVelocity(int left, int right)
 {
-#ifdef MOTOR_SHIELD
-    io_set_pwm(left, right);
-#else
     char startByte = 0x82;
     char crc = left + right + startByte;
     os_printf("%c%c%c%c", startByte, (char)left, (char)right, crc);
-#endif
+    io_set_pwm(left, right);
 }
 
 void ICACHE_FLASH_ATTR onOffDrive(char d)
