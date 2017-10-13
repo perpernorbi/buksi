@@ -117,6 +117,12 @@ void wsDriveRecv(Websock *ws, char *data, int len, int flags) {
     int retval = 0;
     int direct_drive = 0;
     int left, right;
+    if (strncmp(data, "toggle_lights", strlen("toggle_lights")) == 0) {
+        os_printf("toggle\n");
+        ioLedToggle();
+        os_printf("toggle\n");
+        return;
+    }
     jsonparse_setup(&json_state, data, len);
     while ((retval = jsonparse_next(&json_state)) != JSON_TYPE_ERROR) {
         if (retval == JSON_TYPE_PAIR_NAME) {
@@ -133,7 +139,6 @@ void wsDriveRecv(Websock *ws, char *data, int len, int flags) {
                 jsonparse_assert_next(&json_state, ']');
             }
         }
-
     }
 
     if (direct_drive) {
