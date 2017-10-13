@@ -139,6 +139,7 @@
 
    setInterval(function(){
     var message = stopMessage;
+    var x = joystick.deltaX()/joystickDenominator;
     var y = joystick.deltaY()/joystickDenominator;
     var speedScale = y/25;
     var l = - x*speedScale - y;
