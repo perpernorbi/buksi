@@ -122,8 +122,9 @@
     var message = stopMessage;
     var x = joystick.deltaX()/joystickDenominator;
     var y = joystick.deltaY()/joystickDenominator;
-    var l = - x - y;
-    var r = x - y;
+    var speedScale = y/25;
+    var l = - x*speedScale - y;
+    var r = + x*speedScale - y;
     if (l > 31) l = 31;
     if (l < -31) l = -31;
     if (r > 31) r = 31;
