@@ -53,7 +53,7 @@ static ETSTimer resetBtntimer;
 
 static uint8_t ledState = 0;
 
-static void (*statusChangeHandler)(void);
+static void (*statusChangeHandler)(void) = NULL;
 void ICACHE_FLASH_ATTR ioLedChangeHandler(void (*f)(void))
 {
     statusChangeHandler = f;
@@ -68,7 +68,8 @@ void ICACHE_FLASH_ATTR ioLed(int ena) {
         gpio_output_set(0, LED_GPIO_BIT, 0, 0);
         ledState = 0;
     }
-    statusChangeHandler();
+    if (statusChangeHandler != NULL)
+        statusChangeHandler();
 }
 
 void ICACHE_FLASH_ATTR io_set_pwm(int left, int right)
