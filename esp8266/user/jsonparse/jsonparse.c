@@ -32,9 +32,10 @@
 #include "jsonparse.h"
 #include <stdlib.h>
 #include <string.h>
+#include <esp8266.h>
 
 /*--------------------------------------------------------------------*/
-static int
+static int ICACHE_FLASH_ATTR
 push(struct jsonparse_state *state, char c)
 {
   state->stack[state->depth] = c;
@@ -43,7 +44,7 @@ push(struct jsonparse_state *state, char c)
   return state->depth < JSONPARSE_MAX_DEPTH;
 }
 /*--------------------------------------------------------------------*/
-static void
+static void ICACHE_FLASH_ATTR
 modify(struct jsonparse_state *state, char c)
 {
   if(state->depth > 0) {
@@ -51,7 +52,7 @@ modify(struct jsonparse_state *state, char c)
   }
 }
 /*--------------------------------------------------------------------*/
-static char
+static char ICACHE_FLASH_ATTR
 pop(struct jsonparse_state *state)
 {
   if(state->depth == 0) {
@@ -65,7 +66,7 @@ pop(struct jsonparse_state *state)
 /* will pass by the value and store the start and length of the value for
    atomic types */
 /*--------------------------------------------------------------------*/
-static char
+static char ICACHE_FLASH_ATTR
 atomic(struct jsonparse_state *state, char type)
 {
   char c;
@@ -123,7 +124,7 @@ atomic(struct jsonparse_state *state, char type)
   return state->vtype;
 }
 /*--------------------------------------------------------------------*/
-static void
+static void ICACHE_FLASH_ATTR
 skip_ws(struct jsonparse_state *state)
 {
   char c;
@@ -134,7 +135,7 @@ skip_ws(struct jsonparse_state *state)
   }
 }
 /*--------------------------------------------------------------------*/
-static int
+static int ICACHE_FLASH_ATTR
 is_atomic(struct jsonparse_state *state)
 {
   char v = state->vtype;
@@ -145,7 +146,7 @@ is_atomic(struct jsonparse_state *state)
   }
 }
 /*--------------------------------------------------------------------*/
-void
+void ICACHE_FLASH_ATTR
 jsonparse_setup(struct jsonparse_state *state, const char *json, int len)
 {
   state->json = json;
@@ -157,7 +158,7 @@ jsonparse_setup(struct jsonparse_state *state, const char *json, int len)
   state->stack[0] = 0;
 }
 /*--------------------------------------------------------------------*/
-int
+int ICACHE_FLASH_ATTR
 jsonparse_next(struct jsonparse_state *state)
 {
   char c;
@@ -266,7 +267,7 @@ jsonparse_next(struct jsonparse_state *state)
  * works only on "atomic" values such as string, number, null, false, true
  */
 /*--------------------------------------------------------------------*/
-int
+int ICACHE_FLASH_ATTR
 jsonparse_copy_value(struct jsonparse_state *state, char *str, int size)
 {
   int i, o;
@@ -297,7 +298,7 @@ jsonparse_copy_value(struct jsonparse_state *state, char *str, int size)
   return state->vtype;
 }
 /*--------------------------------------------------------------------*/
-int
+int ICACHE_FLASH_ATTR
 jsonparse_get_value_as_int(struct jsonparse_state *state)
 {
   if(state->vtype != JSON_TYPE_NUMBER) {
@@ -306,7 +307,7 @@ jsonparse_get_value_as_int(struct jsonparse_state *state)
   return atoi(&state->json[state->vstart]);
 }
 /*--------------------------------------------------------------------*/
-long
+long ICACHE_FLASH_ATTR
 jsonparse_get_value_as_long(struct jsonparse_state *state)
 {
   if(state->vtype != JSON_TYPE_NUMBER) {
@@ -317,7 +318,7 @@ jsonparse_get_value_as_long(struct jsonparse_state *state)
 /*--------------------------------------------------------------------*/
 /* strcmp - assume no strange chars that needs to be stuffed in string... */
 /*--------------------------------------------------------------------*/
-int
+int ICACHE_FLASH_ATTR
 jsonparse_strcmp_value(struct jsonparse_state *state, const char *str)
 {
   if(!is_atomic(state)) {
@@ -326,13 +327,13 @@ jsonparse_strcmp_value(struct jsonparse_state *state, const char *str)
   return strncmp(str, &state->json[state->vstart], state->vlen);
 }
 /*--------------------------------------------------------------------*/
-int
+int ICACHE_FLASH_ATTR
 jsonparse_get_len(struct jsonparse_state *state)
 {
   return state->vlen;
 }
 /*--------------------------------------------------------------------*/
-int
+int ICACHE_FLASH_ATTR
 jsonparse_get_type(struct jsonparse_state *state)
 {
   if(state->depth == 0) {
@@ -341,7 +342,7 @@ jsonparse_get_type(struct jsonparse_state *state)
   return state->stack[state->depth - 1];
 }
 /*--------------------------------------------------------------------*/
-int
+int ICACHE_FLASH_ATTR
 jsonparse_has_next(struct jsonparse_state *state)
 {
   return state->pos < state->len;

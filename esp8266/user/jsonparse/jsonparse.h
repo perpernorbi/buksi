@@ -33,6 +33,7 @@
 #define JSONPARSE_H_
 
 #include "json.h"
+#include <esp8266.h>
 
 #ifdef JSONPARSE_CONF_MAX_DEPTH
 #define JSONPARSE_MAX_DEPTH JSONPARSE_CONF_MAX_DEPTH
@@ -62,29 +63,29 @@ struct jsonparse_state {
  *             This function initializes a JSON parser state for
  *             parsing a string as JSON.
  */
-void jsonparse_setup(struct jsonparse_state *state, const char *json,
+void ICACHE_FLASH_ATTR jsonparse_setup(struct jsonparse_state *state, const char *json,
                      int len);
 
 /* move to next JSON element */
-int jsonparse_next(struct jsonparse_state *state);
+int ICACHE_FLASH_ATTR jsonparse_next(struct jsonparse_state *state);
 
 /* copy the current JSON value into the specified buffer */
-int jsonparse_copy_value(struct jsonparse_state *state, char *buf,
+int ICACHE_FLASH_ATTR jsonparse_copy_value(struct jsonparse_state *state, char *buf,
                          int buf_size);
 
 /* get the current JSON value parsed as an int */
-int jsonparse_get_value_as_int(struct jsonparse_state *state);
+int ICACHE_FLASH_ATTR jsonparse_get_value_as_int(struct jsonparse_state *state);
 
 /* get the current JSON value parsed as a long */
-long jsonparse_get_value_as_long(struct jsonparse_state *state);
+long ICACHE_FLASH_ATTR jsonparse_get_value_as_long(struct jsonparse_state *state);
 
 /* get the length of the current JSON value */
-int jsonparse_get_len(struct jsonparse_state *state);
+int ICACHE_FLASH_ATTR jsonparse_get_len(struct jsonparse_state *state);
 
 /* get the type of the current JSON value */
-int jsonparse_get_type(struct jsonparse_state *state);
+int ICACHE_FLASH_ATTR jsonparse_get_type(struct jsonparse_state *state);
 
 /* compare the JSON value with the specified string */
-int jsonparse_strcmp_value(struct jsonparse_state *state, const char *str);
+int ICACHE_FLASH_ATTR jsonparse_strcmp_value(struct jsonparse_state *state, const char *str);
 
 #endif /* JSONPARSE_H_ */

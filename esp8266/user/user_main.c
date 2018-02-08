@@ -29,6 +29,7 @@ some pictures of cats.
 #include "cgi-test.h"
 #include "json.h"
 #include "jsonparse/jsonparse.h"
+#include <user_interface.h>
 
 //The example can print out the heap use every 3 seconds. You can use this to catch memory leaks.
 //#define SHOW_HEAP_USE
@@ -91,7 +92,7 @@ int ICACHE_FLASH_ATTR cgiWiFiStatus (HttpdConnData *connData)
     return HTTPD_CGI_DONE;
 }
 
-int jsonparse_assert_next(struct jsonparse_state *state, int expected_json_type)
+int ICACHE_FLASH_ATTR jsonparse_assert_next(struct jsonparse_state *state, int expected_json_type)
 {
     int type;
     type = jsonparse_next(state);
@@ -112,7 +113,12 @@ int jsonparse_assert_next(struct jsonparse_state *state, int expected_json_type)
     "velocities": [10, 10]
 }
 */
-void wsDriveRecv(Websock *ws, char *data, int len, int flags) {
+void ICACHE_FLASH_ATTR wsDriveRecv(Websock *ws, char *data, int len, int flags) {
+    if (!isItTheLatestLoggedInClient(ws->conn)) {
+        cgiWebsocketSend(ws, "Unauthorized", strlen("Unauthorized"), WEBSOCK_FLAG_NONE);
+        return;
+    }
+
     struct jsonparse_state json_state;
     int retval = 0;
     int direct_drive = 0;
@@ -150,7 +156,7 @@ void wsDriveRecv(Websock *ws, char *data, int len, int flags) {
     //cgiWebsocketSend(ws, buff, strlen(buff), WEBSOCK_FLAG_NONE);
 }
 
-void wsDriveConnect(Websock *ws) {
+void ICACHE_FLASH_ATTR wsDriveConnect(Websock *ws) {
     ws->recvCb=wsDriveRecv;
 //    sendLedStatus();
 }
@@ -188,33 +194,36 @@ should be placed above the URLs they protect.
 HttpdBuiltInUrl builtInUrls[]={
     {"*", cgiRedirectApClientToHostname, "esp8266.nonet"},
     {"/", cgiRedirect, "/index.html"},
+    {"/index.html", cgiEspFsTemplate, tplRobotParams},
+    {"/drive.html", cgiEspFsTemplate, tplRobotParams},
+    {"/login.cgi", cgiLogin, NULL},
     {"/led.cgi", cgiLed, NULL},
     {"/drive.cgi", cgiDrive, NULL},
 #ifdef INCLUDE_FLASH_FNS
     {"/flash/next", cgiGetFirmwareNext, &uploadParams},
     {"/flash/upload", cgiUploadFirmware, &uploadParams},
 #endif
-    {"/flash/reboot", cgiRebootFirmware, NULL},
+//    {"/flash/reboot", cgiRebootFirmware, NULL},
 
     //Routines to make the /wifi URL and everything beneath it work.
 
 //Enable the line below to protect the WiFi configuration with an username/password combo.
 //	{"/wifi/*", authBasic, myPassFn},
 
-    {"/wifi", cgiRedirect, "/wifi/wifi.tpl"},
-    {"/wifi/", cgiRedirect, "/wifi/wifi.tpl"},
-    {"/wifi/wifiscan.cgi", cgiWiFiScan, NULL},
-    {"/wifi/wifi.tpl", cgiEspFsTemplate, tplWlan},
-    {"/wifi/connect.cgi", cgiWiFiConnect, NULL},
-    {"/wifi/connstatus.cgi", cgiWiFiConnStatus, NULL},
-    {"/wifi/wifistatus.cgi", cgiWiFiStatus, NULL},
-    {"/wifi/setmode.cgi", cgiWiFiSetMode, NULL},
+//    {"/wifi", cgiRedirect, "/wifi/wifi.tpl"},
+//    {"/wifi/", cgiRedirect, "/wifi/wifi.tpl"},
+//    {"/wifi/wifiscan.cgi", cgiWiFiScan, NULL},
+//    {"/wifi/wifi.tpl", cgiEspFsTemplate, tplWlan},
+//    {"/wifi/connect.cgi", cgiWiFiConnect, NULL},
+//    {"/wifi/connstatus.cgi", cgiWiFiConnStatus, NULL},
+//    {"/wifi/wifistatus.cgi", cgiWiFiStatus, NULL},
+//    {"/wifi/setmode.cgi", cgiWiFiSetMode, NULL},
 
     {"/drive-ws.cgi", cgiWebsocket, wsDriveConnect},
 
-    {"/test", cgiRedirect, "/test/index.html"},
-    {"/test/", cgiRedirect, "/test/index.html"},
-    {"/test/test.cgi", cgiTestbed, NULL},
+//    {"/test", cgiRedirect, "/test/index.html"},
+//    {"/test/", cgiRedirect, "/test/index.html"},
+//    {"/test/test.cgi", cgiTestbed, NULL},
 
     {"*", cgiEspFsHook, NULL}, //Catch-all cgi function for the filesystem
     {NULL, NULL, NULL}
@@ -229,9 +238,29 @@ static void ICACHE_FLASH_ATTR prHeapTimerCb(void *arg) {
 }
 #endif
 
+void ICACHE_FLASH_ATTR setAccessPoint()
+{
+    os_printf("I have been here\n");
+    struct softap_config c;
+    if (wifi_softap_get_config(&c)) {
+        os_printf("I have been here\n");
+        os_memset(c.ssid, 0, 32);
+        os_memset(c.password, 0, 64);
+        os_memcpy(c.ssid, "Pongo", 7);
+        os_memcpy(c.password, "aegohV4U", 8);
+        c.ssid_len = strlen("Pongo");
+        c.authmode = AUTH_WPA2_PSK;
+        wifi_softap_set_config(&c);
+    }
+}
+
 //Main routine. Initialize stdout, the I/O, filesystem and the webserver and we're done.
 void user_init(void) {
     stdoutInit();
+
+    os_printf("I have been here\n");
+
+    setAccessPoint();
     ioInit();
     captdnsInit();
 

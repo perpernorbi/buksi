@@ -17,8 +17,10 @@ flash as a binary. Also handles the hit counter on the main page.
 #include "cgi.h"
 #include "io.h"
 #include "json.h"
+#include "robot.h"
 
 static const char speed = 0x09;
+uint8 remote_ip[4];
 
 void ICACHE_FLASH_ATTR sendVelocity(char left, char right)
 {
@@ -56,12 +58,25 @@ void ICACHE_FLASH_ATTR onOffDrive(char d)
     }
 }
 
+bool ICACHE_FLASH_ATTR isItTheLatestLoggedInClient(HttpdConnData *connData) {
+    return
+            (remote_ip[0] == connData->remote_ip[0]) &&
+            (remote_ip[1] == connData->remote_ip[1]) &&
+            (remote_ip[2] == connData->remote_ip[2]) &&
+            (remote_ip[3] == connData->remote_ip[3]);
+}
+
 int ICACHE_FLASH_ATTR cgiDrive(HttpdConnData *connData) {
     int len;
     char buff[1024];
 
     if (connData->conn==NULL) {
         //Connection aborted. Clean up.
+        return HTTPD_CGI_DONE;
+    }
+
+    if (!isItTheLatestLoggedInClient(connData)) {
+        httpdRedirect(connData, "index.html");
         return HTTPD_CGI_DONE;
     }
 
@@ -124,25 +139,52 @@ int ICACHE_FLASH_ATTR cgiLed(HttpdConnData *connData) {
     return HTTPD_CGI_DONE;
 }
 
+void ICACHE_FLASH_ATTR saveRemoteIp(HttpdConnData *connData)
+{
+    remote_ip[0] = connData->remote_ip[0];
+    remote_ip[1] = connData->remote_ip[1];
+    remote_ip[2] = connData->remote_ip[2];
+    remote_ip[3] = connData->remote_ip[3];
+}
+
+int ICACHE_FLASH_ATTR cgiLogin(HttpdConnData *connData)
+{
+    int len;
+    char buff[1024];
+
+    if (connData->conn==NULL) {
+        //Connection aborted. Clean up.
+        return HTTPD_CGI_DONE;
+    }
+
+    if (connData->requestType == HTTPD_METHOD_POST) {
+        len=httpdFindArg(connData->post->buff, "psw", buff, sizeof(buff));
+        if (strncmp(buff, robotName, len) == 0) {
+            httpdRedirect(connData, "drive.html");
+            saveRemoteIp(connData);
+        }
+        else
+            httpdRedirect(connData, "index.html");
+    }
+
+    return HTTPD_CGI_DONE;
+}
+
 
 
 //Template code for the led page.
-int ICACHE_FLASH_ATTR tplIndex(HttpdConnData *connData, char *token, void **arg) {
-    char buff[128];
+int ICACHE_FLASH_ATTR tplRobotParams(HttpdConnData *connData, char *token, void **arg) {
     if (token==NULL) return HTTPD_CGI_DONE;
 
-    os_strcpy(buff, "Unknown");
-
-    if (os_strcmp(token, "devicename") == 0) {
-        os_strcpy(buff, "Buksi");
+    if (os_strcmp(token, "robotname") == 0)
+        httpdSend(connData, robotName, -1);
+    else
+    if (os_strcmp(token, "robotcolor") == 0)
+        httpdSend(connData, robotColor, -1);
+    else {
+        httpdSend(connData, "%", -1);
+        httpdSend(connData, token, -1);
+        httpdSend(connData, "%", -1);
     }
-    if (os_strcmp(token, "ledstate")==0) {
-        if (ioGetLed()) {
-            os_strcpy(buff, "on");
-        } else {
-            os_strcpy(buff, "off");
-        }
-    }
-    httpdSend(connData, buff, -1);
     return HTTPD_CGI_DONE;
 }

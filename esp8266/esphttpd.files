@@ -70,3 +70,6 @@ html/virtualjoystick.js
 user/jsonparse/json.h
 user/jsonparse/jsonparse.c
 user/jsonparse/jsonparse.h
+html/welcome.html
+html/drive.html
+user/robot.h
