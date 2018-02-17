@@ -3,19 +3,172 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>%robotname%</title>
+  <script language="javascript" type="text/javascript">
+   var wsUri = "ws://"+window.location.host+"/drive-ws.cgi";
+   var output;
+   var error = 0;
+   function init()
+   {
+    output = document.getElementById("output");
+    connectToWebSocket();
+   }
+
+   function connectToWebSocket()
+   {
+    websocket = new WebSocket(wsUri);
+    websocket.onopen = function(evt) { onOpen(evt) };
+    websocket.onclose = function(evt) { onClose(evt) };
+    websocket.onmessage = function(evt) { onMessage(evt) };
+    websocket.onerror = function(evt) { onError(evt) };
+   }
+
+   function onOpen(evt)
+   {
+    error = 0;
+    writeToScreen("CONNECTED");
+    doSend("s");
+   }
+
+   function onClose(evt)
+   {
+    if (error == 0)
+        writeToScreen("DISCONNECTED");
+    setTimeout(function(){connectToWebSocket()}, 5000);
+   }
+
+   function onMessage(evt)
+   {
+    if (evt.data == "Unauthorized")
+        window.location = "http://" + window.location.host + "/index.html";
+    //writeToScreen('<span style="color: blue;">RECEIVED: ' + evt.data+'</span>');
+   }
+
+   function onError(evt)
+   {
+    error+=1;
+    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.type + ' count: ' + error);
+   }
+
+    var lastMessage = "";
+
+   function doSend(message)
+   {
+     if (websocket.readyState == 1) {
+        if (message != lastMessage) {
+            websocket.send(message);
+            lastMessage = message;
+        }
+     }
+   }
+
+   function toggleLights()
+   {
+     websocket.send("toggle_lights");
+   }
+
+   function writeToScreen(message)
+   {
+    output.innerHTML = "<p>" + message + "</p>";
+   }
+
+   window.addEventListener("load", init, false);
+  </script>
+
+  <style>
+   body {
+    overflow	: hidden;
+    padding		: 0;
+    margin		: 0;
+    background-color: #BBB;
+   }
+   #info {
+    position	: absolute;
+    top		: 0px;
+    width		: 100%;
+    padding		: 5px;
+    text-align	: left;
+    font-size   : small;
+   }
+   #bottom {
+       position: absolute;
+       bottom: 0;
+       width: 100%;
+       padding		: 5px;
+       text-align	: left;
+       font-size   : small;
+   }
+   #joystick {
+    width		: 100%;
+    height		: 100%;
+    overflow	: hidden;
+    padding		: 0;
+    margin		: 0;
+    -webkit-user-select	: none;
+    -moz-user-select	: none;
+    background-color: %robotcolor%;
+   }
+   .big-btn {
+       width: 90px;
+       height: 40px;
+   }
+  </style>
  </head>
  <body>
- <form name="redirect" action="/login.cgi" method="POST">
-   <h1>%robotname%</h1>
-   <p>Enter password to drive %robotname%</p>
-   <input type="password" name="psw">
-   <input type="submit" value="Login">
- </form>
+  <div id="joystick"></div>
+  <div id="info">
+   <h2>Touch to drive %robotname%</h2>
+   <div id="result"></div>
+   <div id="output"></div>
+  </div>
+  <div id="bottom"><button class="big-btn" onclick="toggleLights();">Light</button></div>
+
+  <script src="virtualjoystick.js"></script>
+  <script>
+    var joystickDenominator = 1;
+    function calculateDenominator() {
+     var h = document.getElementById('joystick').clientHeight;
+     var w = document.getElementById('joystick').clientWidth;
+     var d = (h > w) ? w : h;
+     joystickDenominator = d / 80;
+    }
+   var stopMessage = {"drive_mode": "direct", "velocities": [0,0] };
+   console.log("touchscreen is", VirtualJoystick.touchScreenAvailable() ? "available" : "not available");
+
+   var joystick	= new VirtualJoystick({
+    container	: document.getElementById('joystick'),
+    mouseSupport	: true,
+   });
+   joystick.addEventListener('touchEnd', function(){
+    doSend(JSON.stringify(stopMessage))
+   })
+
+   calculateDenominator();
+   window.addEventListener("orientationchange", calculateDenominator);
+
+   setInterval(function(){
+    var message = stopMessage;
+    var x = joystick.deltaX()/joystickDenominator;
+    var y = joystick.deltaY()/joystickDenominator;
+    var speedScale = y/25;
+    var l = - x*speedScale - y;
+    var r = + x*speedScale - y;
+    if (l > 31) l = 31;
+    if (l < -31) l = -31;
+    if (r > 31) r = 31;
+    if (r < -31) r = -31;
+    message.velocities[0] = Math.round(l);
+    message.velocities[1] = Math.round(r);
+    doSend(JSON.stringify(message))
+
+    var outputEl	= document.getElementById('result');
+    outputEl.innerHTML = '<b>Result:</b> '
+                    + ' dx:'+joystick.deltaX()
+                    + ' dy:'+joystick.deltaY()
+                    + (joystick.right()	? ' right'	: '')
+                    + (joystick.up()	? ' up'		: '')
+                    + (joystick.left()	? ' left'	: '')
+                    + (joystick.down()	? ' down' 	: '')
+   }, 50);
+  </script>
  </body>
- <style>
- body {
- text-align: center;
- background-color: %robotcolor%;
- }
- </style>
 </html>

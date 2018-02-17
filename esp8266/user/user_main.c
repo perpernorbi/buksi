@@ -30,6 +30,7 @@ some pictures of cats.
 #include "json.h"
 #include "jsonparse/jsonparse.h"
 #include <user_interface.h>
+#include "robot.h"
 
 //The example can print out the heap use every 3 seconds. You can use this to catch memory leaks.
 //#define SHOW_HEAP_USE
@@ -114,11 +115,6 @@ int ICACHE_FLASH_ATTR jsonparse_assert_next(struct jsonparse_state *state, int e
 }
 */
 void ICACHE_FLASH_ATTR wsDriveRecv(Websock *ws, char *data, int len, int flags) {
-    if (!isItTheLatestLoggedInClient(ws->conn)) {
-        cgiWebsocketSend(ws, "Unauthorized", strlen("Unauthorized"), WEBSOCK_FLAG_NONE);
-        return;
-    }
-
     struct jsonparse_state json_state;
     int retval = 0;
     int direct_drive = 0;
@@ -195,8 +191,6 @@ HttpdBuiltInUrl builtInUrls[]={
     {"*", cgiRedirectApClientToHostname, "esp8266.nonet"},
     {"/", cgiRedirect, "/index.html"},
     {"/index.html", cgiEspFsTemplate, tplRobotParams},
-    {"/drive.html", cgiEspFsTemplate, tplRobotParams},
-    {"/login.cgi", cgiLogin, NULL},
     {"/led.cgi", cgiLed, NULL},
     {"/drive.cgi", cgiDrive, NULL},
 #ifdef INCLUDE_FLASH_FNS
@@ -240,15 +234,18 @@ static void ICACHE_FLASH_ATTR prHeapTimerCb(void *arg) {
 
 void ICACHE_FLASH_ATTR setAccessPoint()
 {
-    os_printf("I have been here\n");
+    if (wifi_get_opmode() != SOFTAP_MODE) {
+        wifi_set_opmode(SOFTAP_MODE);
+        wifi_set_opmode_current(SOFTAP_MODE);
+        //system_restart();
+    }
     struct softap_config c;
     if (wifi_softap_get_config(&c)) {
-        os_printf("I have been here\n");
         os_memset(c.ssid, 0, 32);
         os_memset(c.password, 0, 64);
-        os_memcpy(c.ssid, "Pongo", 7);
-        os_memcpy(c.password, "aegohV4U", 8);
-        c.ssid_len = strlen("Pongo");
+        os_memcpy(c.ssid, ROBOTNAME, 7);
+        os_memcpy(c.password, ROBOTWPA2PSK, 8);
+        c.ssid_len = strlen(ROBOTNAME);
         c.authmode = AUTH_WPA2_PSK;
         wifi_softap_set_config(&c);
     }

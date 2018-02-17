@@ -1,13 +1,24 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
+#define PONGO
 
-//const char* robotName = "Perdita";
-//const char* robotColor = "#ff757c";
+#ifdef PERDITA
+#define ROBOTNAME "Perdita"
+#define ROBOTCOLOR "#75deff"
+#define ROBOTWPA2PSK "EiQuoh7v"
+#endif
 
-const char* robotName = "Pongo";
-const char* robotColor = "#75deff";
+#ifdef PONGO
+#define ROBOTNAME "Pongo"
+#define ROBOTCOLOR "#ff757c"
+#define ROBOTWPA2PSK "aegohV4U"
+#endif
 
-//const char* robotName = "Penny";
-//const char* robotColor = "#5dfc9d";
+#ifdef PENNY
+#define ROBOTNAME "Penny"
+#define ROBOTCOLOR "#5dfc9d"
+#define ROBOTWPA2PSK "aeNgah9g"
+#endif
+
 #endif // ROBOT_H
